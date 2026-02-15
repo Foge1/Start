@@ -112,7 +112,7 @@ fun MainScreen() {
             DispatcherScreen(
                 viewModel = viewModel,
                 userName = currentUser!!.name,
-                onSwitchRole = switchRole
+                onSwitchRole = { switchRole() }
             )
         }
         currentUser?.role == UserRole.LOADER -> {
@@ -126,7 +126,7 @@ fun MainScreen() {
             LoaderScreen(
                 viewModel = viewModel,
                 userName = currentUser!!.name,
-                onSwitchRole = switchRole
+                onSwitchRole = { switchRole() }
             )
         }
     }
