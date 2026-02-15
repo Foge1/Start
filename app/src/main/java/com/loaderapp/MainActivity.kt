@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.loaderapp.data.model.User
@@ -19,8 +20,10 @@ import com.loaderapp.data.model.UserRole
 import com.loaderapp.ui.auth.RoleSelectionScreen
 import com.loaderapp.ui.dispatcher.DispatcherScreen
 import com.loaderapp.ui.dispatcher.DispatcherViewModel
+import com.loaderapp.ui.dispatcher.DispatcherViewModelFactory
 import com.loaderapp.ui.loader.LoaderScreen
 import com.loaderapp.ui.loader.LoaderViewModel
+import com.loaderapp.ui.loader.LoaderViewModelFactory
 import com.loaderapp.ui.theme.LoaderAppTheme
 import kotlinx.coroutines.launch
 
@@ -61,8 +64,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val app = remember { 
-        androidx.compose.ui.platform.LocalContext.current.applicationContext as LoaderApplication 
+    val context = LocalContext.current
+    val app = remember(context) { 
+        context.applicationContext as LoaderApplication 
     }
     
     var currentUser by remember { mutableStateOf<User?>(null) }
