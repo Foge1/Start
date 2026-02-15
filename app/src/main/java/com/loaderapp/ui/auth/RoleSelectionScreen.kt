@@ -17,7 +17,6 @@ fun RoleSelectionScreen(
     onUserCreated: (User) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf<UserRole?>(null) }
     var showError by remember { mutableStateOf(false) }
     
@@ -37,7 +36,7 @@ fun RoleSelectionScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Создайте профиль",
+                text = "Выберите роль",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -46,17 +45,7 @@ fun RoleSelectionScreen(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Имя") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                singleLine = true
-            )
-            
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Телефон") },
+                label = { Text("Ваше имя") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
@@ -64,7 +53,7 @@ fun RoleSelectionScreen(
             )
             
             Text(
-                text = "Выберите роль:",
+                text = "Я работаю как:",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
@@ -88,7 +77,14 @@ fun RoleSelectionScreen(
                             MaterialTheme.colorScheme.surface
                     )
                 ) {
-                    Text("Диспетчер")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Text("📋", fontSize = 32.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Диспетчер")
+                    }
                 }
                 
                 OutlinedButton(
@@ -101,13 +97,20 @@ fun RoleSelectionScreen(
                             MaterialTheme.colorScheme.surface
                     )
                 ) {
-                    Text("Грузчик")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Text("💪", fontSize = 32.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Грузчик")
+                    }
                 }
             }
             
             if (showError) {
                 Text(
-                    text = "Заполните все поля и выберите роль",
+                    text = "Введите имя и выберите роль",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -115,10 +118,10 @@ fun RoleSelectionScreen(
             
             Button(
                 onClick = {
-                    if (name.isNotBlank() && phone.isNotBlank() && selectedRole != null) {
+                    if (name.isNotBlank() && selectedRole != null) {
                         val user = User(
-                            name = name,
-                            phone = phone,
+                            name = name.trim(),
+                            phone = "", // Телефон теперь необязателен
                             role = selectedRole!!
                         )
                         onUserCreated(user)

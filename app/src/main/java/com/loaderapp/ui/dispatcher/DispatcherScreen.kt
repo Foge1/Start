@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,13 +22,15 @@ import java.util.*
 @Composable
 fun DispatcherScreen(
     viewModel: DispatcherViewModel,
-    userName: String
+    userName: String,
+    onSwitchRole: () -> Unit
 ) {
     val orders by viewModel.orders.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     
     var showCreateDialog by remember { mutableStateOf(false) }
+    var showSwitchDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -41,15 +44,23 @@ fun DispatcherScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                },
+                actions = {
+                    IconButton(onClick = { showSwitchDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Сменить роль"
+                        )
+                    }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showCreateDialog = true }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Создать заказ")
-            }
+            ExtendedFloatingActionButton(
+                onClick = { showCreateDialog = true },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Создать заказ") }
+            )
         }
     ) { padding ->
         Box(
@@ -110,9 +121,31 @@ fun DispatcherScreen(
         )
     }
     
+    if (showSwitchDialog) {
+        AlertDialog(
+            onDismissRequest = { showSwitchDialog = false },
+            title = { Text("Сменить роль?") },
+            text = { Text("Вы хотите выйти из режима диспетчера?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSwitchDialog = false
+                        onSwitchRole()
+                    }
+                ) {
+                    Text("Да")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSwitchDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+    
     errorMessage?.let { error ->
         LaunchedEffect(error) {
-            // Можно показать Snackbar
             viewModel.clearError()
         }
     }

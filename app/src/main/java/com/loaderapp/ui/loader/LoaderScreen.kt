@@ -3,6 +3,8 @@ package com.loaderapp.ui.loader
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +21,8 @@ import java.util.*
 @Composable
 fun LoaderScreen(
     viewModel: LoaderViewModel,
-    userName: String
+    userName: String,
+    onSwitchRole: () -> Unit
 ) {
     val availableOrders by viewModel.availableOrders.collectAsState()
     val myOrders by viewModel.myOrders.collectAsState()
@@ -27,6 +30,7 @@ fun LoaderScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     
     var selectedTab by remember { mutableStateOf(0) }
+    var showSwitchDialog by remember { mutableStateOf(false) }
     val tabs = listOf("Доступные", "Мои заказы")
     
     Scaffold(
@@ -40,6 +44,14 @@ fun LoaderScreen(
                                 text = userName,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { showSwitchDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ExitToApp,
+                                contentDescription = "Сменить роль"
                             )
                         }
                     }
@@ -80,9 +92,31 @@ fun LoaderScreen(
         }
     }
     
+    if (showSwitchDialog) {
+        AlertDialog(
+            onDismissRequest = { showSwitchDialog = false },
+            title = { Text("Сменить роль?") },
+            text = { Text("Вы хотите выйти из режима грузчика?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSwitchDialog = false
+                        onSwitchRole()
+                    }
+                ) {
+                    Text("Да")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSwitchDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+    
     errorMessage?.let { error ->
         LaunchedEffect(error) {
-            // Можно показать Snackbar
             viewModel.clearError()
         }
     }

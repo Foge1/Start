@@ -1,7 +1,12 @@
 package com.loaderapp.ui.dispatcher
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,11 +22,21 @@ fun CreateOrderDialog(
     onCreate: (address: String, dateTime: Long, cargo: String, price: Double) -> Unit
 ) {
     var address by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
     var cargo by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
+    
+    // Дата и время
+    val calendar = Calendar.getInstance()
+    var selectedDate by remember { mutableStateOf(calendar.timeInMillis) }
+    var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
+    var selectedMinute by remember { mutableStateOf(calendar.get(Calendar.MINUTE)) }
+    
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    
+    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("ru"))
+    val timeFormat = SimpleDateFormat("HH:mm", Locale("ru"))
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -30,6 +45,7 @@ fun CreateOrderDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -41,27 +57,30 @@ fun CreateOrderDialog(
                     singleLine = true
                 )
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Date Picker Button
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
-                        value = date,
-                        onValueChange = { date = it },
-                        label = { Text("Дата (дд.мм.гггг)") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        placeholder = { Text("15.02.2026") }
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
-                    
-                    OutlinedTextField(
-                        value = time,
-                        onValueChange = { time = it },
-                        label = { Text("Время (чч:мм)") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        placeholder = { Text("14:00") }
+                    Text(dateFormat.format(Date(selectedDate)))
+                }
+                
+                // Time Picker Button  
+                OutlinedButton(
+                    onClick = { showTimePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
+                    Text(String.format("%02d:%02d", selectedHour, selectedMinute))
                 }
                 
                 OutlinedTextField(
@@ -93,15 +112,15 @@ fun CreateOrderDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    try {
-                        if (address.isNotBlank() && 
-                            date.isNotBlank() && 
-                            time.isNotBlank() && 
-                            cargo.isNotBlank() && 
-                            price.isNotBlank()) {
+                    if (address.isNotBlank() && cargo.isNotBlank() && price.isNotBlank()) {
+                        try {
+                            val calendar = Calendar.getInstance()
+                            calendar.timeInMillis = selectedDate
+                            calendar.set(Calendar.HOUR_OF_DAY, selectedHour)
+                            calendar.set(Calendar.MINUTE, selectedMinute)
+                            calendar.set(Calendar.SECOND, 0)
                             
-                            val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                            val dateTime = dateFormat.parse("$date $time")?.time ?: System.currentTimeMillis()
+                            val dateTime = calendar.timeInMillis
                             val priceValue = price.toDoubleOrNull() ?: 0.0
                             
                             if (priceValue > 0) {
@@ -109,10 +128,10 @@ fun CreateOrderDialog(
                             } else {
                                 showError = true
                             }
-                        } else {
+                        } catch (e: Exception) {
                             showError = true
                         }
-                    } catch (e: Exception) {
+                    } else {
                         showError = true
                     }
                 }
@@ -126,4 +145,58 @@ fun CreateOrderDialog(
             }
         }
     )
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { selectedDate = it }
+                    showDatePicker = false
+                }) {
+                    Text("ОК")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Отмена")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    
+    // Time Picker Dialog
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = selectedHour,
+            initialMinute = selectedMinute,
+            is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedHour = timePickerState.hour
+                    selectedMinute = timePickerState.minute
+                    showTimePicker = false
+                }) {
+                    Text("ОК")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Отмена")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
+    }
 }

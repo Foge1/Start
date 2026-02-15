@@ -72,6 +72,14 @@ fun MainScreen() {
     var currentUser by remember { mutableStateOf<User?>(null) }
     val scope = rememberCoroutineScope()
     
+    // Функция смены роли
+    val switchRole = {
+        scope.launch {
+            app.userPreferences.clearCurrentUser()
+            currentUser = null
+        }
+    }
+    
     // Проверяем, есть ли сохраненный пользователь
     LaunchedEffect(Unit) {
         app.userPreferences.currentUserId.collect { userId ->
@@ -103,7 +111,8 @@ fun MainScreen() {
             )
             DispatcherScreen(
                 viewModel = viewModel,
-                userName = currentUser!!.name
+                userName = currentUser!!.name,
+                onSwitchRole = switchRole
             )
         }
         currentUser?.role == UserRole.LOADER -> {
@@ -116,7 +125,8 @@ fun MainScreen() {
             )
             LoaderScreen(
                 viewModel = viewModel,
-                userName = currentUser!!.name
+                userName = currentUser!!.name,
+                onSwitchRole = switchRole
             )
         }
     }
